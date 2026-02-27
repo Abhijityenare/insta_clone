@@ -1,5 +1,5 @@
 const userModel = require('../models/user.model')
-const crypto = require('crypto')
+const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 
@@ -21,7 +21,7 @@ async function registerController(req,res){
         })
     }
 
-    const hash = crypto.createHash('sha256').update(password).digest('hex')
+    const hash = await bcrypt.hash(password,10)
 
      const user = await userModel.create({
         username,
@@ -73,9 +73,8 @@ async function loginController(req,res){
         })
     }
 
-    const hash = crypto.createHash('sha256').update(password).digest('hex')
 
-    const isPasswordCorrect = hash == user.password
+    const isPasswordCorrect = await bcrypt.compare(password,user.password)
 
     if (!isPasswordCorrect) {
         return res.status(404).json({
@@ -89,7 +88,7 @@ async function loginController(req,res){
         {expiresIn:"1d"}
     )
 
-    res.cookie('user',token)
+    res.cookie('token',token)
 
     res.status(200).json({
         message:"login successfully",
